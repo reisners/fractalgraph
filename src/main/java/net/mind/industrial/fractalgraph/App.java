@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 public class App
 {
     private final int width, height, originx, originy, scale;
+    private final String output;
     private final GeometryGenerator geometryGenerator = new GeometryGenerator();
 
     private final SVGGenerator svgGenerator;
@@ -27,25 +28,27 @@ public class App
     private final Color color3 = Color.decode("#9C7FB4");
     private final Color color4 = Color.decode("#CEDBE1");
 
-    public App(int width, int height, int originx, int originy, int scale) {
+    public App(int width, int height, int originx, int originy, int scale, String output) {
         this.width = width;
         this.height = height;
         this.originx = originx;
         this.originy = originy;
         this.scale = scale;
+        this.output = output;
         this.svgGenerator = new SVGGenerator(new Dimension(width, height));
     }
 
     public static void main(String[] args )
     {
         int index = 0;
+        String output = args[index++];
         int width = Integer.parseInt(args[index++]);
         int height = Integer.parseInt(args[index++]);
         int originx = Integer.parseInt(args[index++]);
         int originy = Integer.parseInt(args[index++]);
         int scale = Integer.parseInt(args[index++]);
         try {
-            new App(width, height, originx, originy, scale).run();
+            new App(width, height, originx, originy, scale, output).run();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -67,7 +70,7 @@ public class App
         });
 
         renderSVG(rotate1, scaleProgression, scale1, world, index++, (g2d, view) -> {
-            drawGeo2(view, g2d, 0.5f);
+            drawGeo2(view, g2d, 0.7f);
             drawGeo1(view, g2d);
         });
 
@@ -77,7 +80,7 @@ public class App
         });
 
         renderSVG(rotate1, scaleProgression, scale1, world, index++, (g2d, view) -> {
-            drawGeo3(view, g2d, 0.5f);
+            drawGeo3(view, g2d, 0.7f);
             drawGeo2(view, g2d, 1);
             drawGeo1(view, g2d);
         });
@@ -89,7 +92,7 @@ public class App
         });
 
         renderSVG(rotate1, scaleProgression, scale1, world, index++, (g2d, view) -> {
-            drawGeo4(view, g2d, 0.5f);
+            drawGeo4(view, g2d, 0.7f);
             drawGeo3(view, g2d, 1);
             drawGeo2(view, g2d, 1);
             drawGeo1(view, g2d);
@@ -103,7 +106,7 @@ public class App
         });
 
         renderSVG(rotate1, scaleProgression, scale1, world, index++, (g2d, view) -> {
-            drawGeo5(view, g2d, 0.5f);
+            drawGeo5(view, g2d, 0.7f);
             drawGeo4(view, g2d, 1);
             drawGeo3(view, g2d, 1);
             drawGeo2(view, g2d, 1);
@@ -123,7 +126,7 @@ public class App
         svgGenerator.generateSVG(g2d -> {
             double scale = scale1 * Math.pow(scaleProgression, index);
             biConsumer.accept(g2d, new Geometry(transform(world, scale, rotate1), index, scaleProgression));
-        }, new FileWriter("img/img"+index+".svg"));
+        }, new FileWriter(String.format("%s/img%02d.svg", output, index)));
     }
 
     private void drawGeo5(Geometry geometry, SVGGraphics2D g2d, float phase) {
@@ -156,10 +159,11 @@ public class App
 
     private void drawGeo1(Geometry geometry, SVGGraphics2D g2d) {
         Point2D[] view = geometry.getView();
-        double scale0 = 10 * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-12);
-        double scale1 = 10 * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-8);
-        double scale2 = 10 * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-4);
-        double scale3 = 10 * Math.pow(geometry.getScaleProgression(), geometry.getIndex());
+        int radius = width / 20;
+        double scale0 = radius * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-12);
+        double scale1 = radius * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-8);
+        double scale2 = radius * Math.pow(geometry.getScaleProgression(), geometry.getIndex()-4);
+        double scale3 = radius * Math.pow(geometry.getScaleProgression(), geometry.getIndex());
 
         log.info("index={} scale0={} scale1={} scale2={} scale3={}", geometry.getIndex(), scale0, scale1, scale2, scale3);
 
@@ -191,7 +195,7 @@ public class App
 
     private void drawLine(SVGGraphics2D g2d, Point2D pstart, Point2D pend, float phase) {
         float length = (float) Math.sqrt(Math.pow(pstart.getX()-pend.getX(), 2)+Math.pow(pstart.getY()-pend.getY(), 2));
-        g2d.setStroke(new BasicStroke(length/20));
+        g2d.setStroke(new BasicStroke(length/10));
         g2d.setColor(color4);
         if (phase == 1) {
             g2d.drawLine(pstart.getX(), pstart.getY(), pend.getX(), pend.getY());
