@@ -58,6 +58,58 @@
   </dependencies>
 
   <build>
+    <plugins>
+      <plugin>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <executions>
+          <execution>
+            <id>run</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>exec:java</goal>
+            </goals>
+            <configuration>
+              <mainClass>net.mind.industrial.fractalgraph.App</mainClass>
+              <arguments>64 64 32 32 7 ${project.build.directory}/svg</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>png</id>
+            <phase>package</phase>
+            <configuration>
+              <target name="main">
+                <taskdef name="rasterize" classname="org.apache.tools.ant.taskdefs.optional.RasterizerTask"/>
+                <rasterize result="image/png" destdir="${project.build.directory}/png">
+                  <fileset dir="${project.build.directory}/svg">
+                    <include name="*.svg"/>
+                  </fileset>
+                </rasterize>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>batik</groupId>
+            <artifactId>batik-rasterizer</artifactId>
+            <version>1.6-1</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <plugin>
