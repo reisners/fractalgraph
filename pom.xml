@@ -17,6 +17,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <png-list>
+      ${project.build.directory}/png/img00.png,${project.build.directory}/png/img01.png,${project.build.directory}/png/img02.png,${project.build.directory}/png/img03.png,${project.build.directory}/png/img04.png,${project.build.directory}/png/img05.png,${project.build.directory}/png/img06.png,${project.build.directory}/png/img07.png
+    </png-list>
   </properties>
 
   <dependencies>
@@ -60,53 +63,73 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.6.0</version>
         <executions>
           <execution>
-            <id>run</id>
+            <id>generate</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>exec:java</goal>
+              <goal>exec</goal>
             </goals>
             <configuration>
-              <mainClass>net.mind.industrial.fractalgraph.App</mainClass>
-              <arguments>64 64 32 32 7 ${project.build.directory}/svg</arguments>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath/>
+                <argument>net.mind.industrial.fractalgraph.App</argument>
+                <argument>64</argument>
+                <argument>64</argument>
+                <argument>32</argument>
+                <argument>32</argument>
+                <argument>7</argument>
+                <argument>${project.build.directory}/svg</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>animate</id>
+            <phase>package</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath/>
+                <argument>net.mind.industrial.fractalgraph.WriteAnimatedGif</argument>
+                <argument>${project.build.directory}/animated.gif</argument>
+                <argument>${png-list}</argument>
+                <argument>20,20,20,20,20,20,20,20</argument>
+              </arguments>
             </configuration>
           </execution>
         </executions>
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <groupId>jp.uphy.maven</groupId>
+        <artifactId>svg-maven-plugin</artifactId>
+        <version>1.1</version>
         <executions>
           <execution>
-            <id>png</id>
-            <phase>package</phase>
-            <configuration>
-              <target name="main">
-                <taskdef name="rasterize" classname="org.apache.tools.ant.taskdefs.optional.RasterizerTask"/>
-                <rasterize result="image/png" destdir="${project.build.directory}/png">
-                  <fileset dir="${project.build.directory}/svg">
-                    <include name="*.svg"/>
-                  </fileset>
-                </rasterize>
-              </target>
-            </configuration>
+            <id>Rasterize</id>
+            <phase>prepare-package</phase>
             <goals>
-              <goal>run</goal>
+              <goal>rasterize-batch</goal>
             </goals>
-          </execution>
+            <configuration>
+              <!-- Input directory path.  Must exist.[Required] -->
+              <!-- Files in this directory must be named [name]_[maximumWidth]x[maximumHeight].svg -->
+              <inputDirectory>${project.build.directory}/svg</inputDirectory>
+              <!-- Format for output image(png, jpg, pdf, tiff). [Optional, default:png] -->
+              <format>png</format>
+              <!-- Output directory path.  Must exist.[Required] -->
+              <outputDirectory>${project.build.directory}/png</outputDirectory>
+            </configuration>          </execution>
         </executions>
-        <dependencies>
-          <dependency>
-            <groupId>batik</groupId>
-            <artifactId>batik-rasterizer</artifactId>
-            <version>1.6-1</version>
-          </dependency>
-        </dependencies>
       </plugin>
     </plugins>
 
@@ -160,4 +183,12 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>svg-maven-plugin-repository</id>
+      <url>https://raw.github.com/uphy/svg-maven-plugin/mvn-repo/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
 </project>

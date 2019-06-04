@@ -3,11 +3,14 @@ package net.mind.industrial.fractalgraph;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.util.CleanerThread;
 import org.apache.commons.math3.complex.Complex;
 
 import java.awt.*;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.function.BiConsumer;
 
 /**
@@ -18,7 +21,7 @@ import java.util.function.BiConsumer;
 public class App
 {
     private final int width, height, originx, originy, scale;
-    private final String output;
+    private final String outputDir;
     private final GeometryGenerator geometryGenerator = new GeometryGenerator();
 
     private final SVGGenerator svgGenerator;
@@ -34,19 +37,19 @@ public class App
         this.originx = originx;
         this.originy = originy;
         this.scale = scale;
-        this.output = output;
+        this.outputDir = output;
         this.svgGenerator = new SVGGenerator(new Dimension(width, height));
     }
 
     public static void main(String[] args )
     {
         int index = 0;
-        String output = args[index++];
         int width = Integer.parseInt(args[index++]);
         int height = Integer.parseInt(args[index++]);
         int originx = Integer.parseInt(args[index++]);
         int originy = Integer.parseInt(args[index++]);
         int scale = Integer.parseInt(args[index++]);
+        String output = args[index++];
         try {
             new App(width, height, originx, originy, scale, output).run();
         } catch (IOException e) {
@@ -112,7 +115,6 @@ public class App
             drawGeo2(view, g2d, 1);
             drawGeo1(view, g2d);
         });
-
     }
 
     @Data
@@ -123,10 +125,14 @@ public class App
     }
 
     private void renderSVG(double rotate1, double scaleProgression, double scale1, Complex[] world, int index, BiConsumer<SVGGraphics2D, Geometry> biConsumer) throws IOException {
+        File dir = new File(outputDir);
+        dir.mkdirs();
+        String fileName = String.format("img%02d_%dx%d.svg", index, width, height);
+        File file = new File(dir, fileName);
         svgGenerator.generateSVG(g2d -> {
             double scale = scale1 * Math.pow(scaleProgression, index);
             biConsumer.accept(g2d, new Geometry(transform(world, scale, rotate1), index, scaleProgression));
-        }, new FileWriter(String.format("%s/img%02d.svg", output, index)));
+        }, new FileWriter(file));
     }
 
     private void drawGeo5(Geometry geometry, SVGGraphics2D g2d, float phase) {
